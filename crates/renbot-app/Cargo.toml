@@ -3,11 +3,14 @@ name = "renbot"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-only"
+authors = ["ildoddo"]
+repository = "https://github.com/ildoddo/renbot"
 
 [dependencies]
 anyhow = "1.0.104"
 eframe = "0.36"
 egui-phosphor = "0.14.0"
+renbot-cli = { version = "0.1.0", path = "../renbot-cli" }
 renbot-core = { version = "0.1.0", path = "../renbot-core" }
 rfd = "0.18.0"
 tokio = { version = "1.54.1", features = ["rt-multi-thread"] }

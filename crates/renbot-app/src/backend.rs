@@ -18,6 +18,7 @@ use renbot_core::providers::tmdb::Tmdb;
 use renbot_core::providers::tvdb::Tvdb;
 use renbot_core::providers::{self, omdb, Episode, MetadataProvider, ProviderId, SearchResult};
 use renbot_core::renamer::{self, ApplyReport, PreviewRow, UndoReport};
+use renbot_core::workflow;
 
 use crate::strings;
 
@@ -31,13 +32,7 @@ pub enum Origin {
     Lists,
 }
 
-/// Esito dell'abbinamento automatico di un file.
-pub struct MatchData {
-    /// Candidati ordinati per punteggio; vuoto se la ricerca non ha trovato nulla.
-    pub candidates: Vec<ScoredResult>,
-    /// Episodi del primo candidato, se è una serie.
-    pub episodes: Vec<Episode>,
-}
+pub use renbot_core::workflow::Match as MatchData;
 
 pub enum Event {
     Matched {
@@ -194,40 +189,14 @@ impl Backend {
         self.spawn(async move {
             let result = async {
                 let (primary, fallback) = pair?;
-                let (source, found) = providers::search(
-                    primary.as_ref(),
-                    fallback.as_deref(),
-                    parsed.kind(),
-                    &parsed.title,
-                    parsed.year,
-                    &language,
-                )
-                .await
-                .map_err(|e| e.to_string())?;
-                let candidates = matcher::rank(&parsed.title, parsed.year, found);
-                let mut episodes = Vec::new();
-                if let Some(best) = candidates
-                    .first()
-                    .filter(|c| c.result.kind == MediaKind::Episode)
-                {
-                    let provider = match fallback {
-                        Some(fallback) if fallback.id() == source => fallback,
-                        _ => primary,
-                    };
-                    episodes = providers::episodes_localized(
-                        provider.as_ref(),
-                        &best.result.id,
-                        &language,
-                    )
+                workflow::find_match(primary.as_ref(), fallback.as_deref(), &parsed, &language)
                     .await
-                    .map_err(|e| e.to_string())?;
-                }
-                Ok(MatchData {
-                    candidates,
-                    episodes,
-                })
+                    .map_err(|e| e.to_string())
             }
             .await;
+            if let Err(error) = &result {
+                tracing::warn!(title = %parsed.title, %error, "abbinamento non riuscito");
+            }
             Event::Matched {
                 id,
                 generation,

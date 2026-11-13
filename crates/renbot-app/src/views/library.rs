@@ -7,9 +7,9 @@ use egui_phosphor::regular as icons;
 use renbot_core::matcher::ScoredResult;
 use renbot_core::parser::{self, MediaKind, ParsedName};
 use renbot_core::providers::{Episode, ProviderId};
-use renbot_core::renamer::format::{render, FormatValues};
 use renbot_core::renamer::{self, ApplyReport, PreviewRow, PreviewStatus, RenameItem, UndoReport};
 use renbot_core::scanner;
+use renbot_core::workflow;
 
 use super::{file_name, pick_files, pick_folder, title_with_year, Request, Shared, View};
 use crate::backend::{MatchData, Origin};
@@ -54,23 +54,7 @@ impl Row {
             return None;
         };
         let result = &self.chosen()?.result;
-        match result.kind {
-            MediaKind::Movie => Some(render(
-                movie_format,
-                &FormatValues::movie(&self.parsed, result),
-            )),
-            MediaKind::Episode => {
-                // Un nome senza stagione (tipico degli anime) è cercato nella prima.
-                let season = self.parsed.season.unwrap_or(1);
-                let episode = episodes
-                    .iter()
-                    .find(|e| e.season == season && Some(e.number) == self.parsed.episode)?;
-                Some(render(
-                    series_format,
-                    &FormatValues::episode(&self.parsed, result, episode),
-                ))
-            }
-        }
+        workflow::relative_target(&self.parsed, result, episodes, movie_format, series_format)
     }
 
     fn ready(&self) -> bool {

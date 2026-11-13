@@ -23,6 +23,12 @@ impl RenameItem {
     /// Senza cartella di base il nuovo percorso parte dalla cartella del file.
     pub fn new(source: impl Into<PathBuf>, base: Option<&Path>, relative: &Path) -> Self {
         let source = source.into();
+        // Un file già al suo posto resta dov'è: senza questo controllo, ripetere la
+        // rinomina su una cartella già ordinata annidrebbe di nuovo le sottocartelle.
+        if base.is_none() && !relative.as_os_str().is_empty() && source.ends_with(relative) {
+            let target = source.clone();
+            return Self { source, target };
+        }
         let base = base.or(source.parent()).unwrap_or(Path::new(""));
         let target = base.join(relative);
         Self { source, target }
@@ -287,6 +293,21 @@ mod tests {
         assert_eq!(
             RenameItem::new(&source, Some(Path::new("libreria")), &relative).target,
             Path::new("libreria").join("Serie").join("b.mkv")
+        );
+    }
+
+    #[test]
+    fn un_file_già_al_suo_posto_non_viene_annidato() {
+        let relative = Path::new("Serie").join("Season 1").join("b.mkv");
+        let source = Path::new("video").join(&relative);
+        let item = RenameItem::new(&source, None, &relative);
+        assert_eq!(item.target, source);
+
+        // Con lo stesso nome ma in un'altra cartella il file va comunque spostato.
+        let elsewhere = Path::new("video").join("b.mkv");
+        assert_eq!(
+            RenameItem::new(&elsewhere, None, &relative).target,
+            Path::new("video").join(&relative)
         );
     }
 

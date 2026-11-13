@@ -30,7 +30,12 @@ fn init_logging() {
     }
 }
 
-fn main() -> anyhow::Result<()> {
+fn main() -> anyhow::Result<std::process::ExitCode> {
+    // Con degli argomenti renbot lavora da terminale, senza aprire la finestra.
+    let args: Vec<_> = std::env::args_os().collect();
+    if renbot_cli::wants_cli(&args) {
+        return Ok(renbot_cli::main_from_env());
+    }
     init_logging();
     tracing::info!(version = env!("CARGO_PKG_VERSION"), "avvio di renbot");
     let options = eframe::NativeOptions {
@@ -45,5 +50,6 @@ fn main() -> anyhow::Result<()> {
         options,
         Box::new(|cc| Ok(Box::new(app::RenbotApp::new(cc)?))),
     )
-    .map_err(|error| anyhow::anyhow!("{error}"))
+    .map_err(|error| anyhow::anyhow!("{error}"))?;
+    Ok(std::process::ExitCode::SUCCESS)
 }

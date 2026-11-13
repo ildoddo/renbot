@@ -9,5 +9,7 @@ pub mod providers;
 pub mod renamer;
 pub mod scanner;
 
-#[cfg(test)]
-pub(crate) mod testing;
+pub mod workflow;
+
+#[cfg(any(test, feature = "test-util"))]
+pub mod testing;
