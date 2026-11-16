@@ -31,41 +31,8 @@ Scritta in Rust con interfaccia [egui](https://github.com/emilk/egui).
 cargo run --release -p renbot
 ```
 
-Per compilare tutto, compreso `renbot-cli`: `cargo build --release`.
-
 La prima compilazione richiede alcuni minuti. L'eseguibile si trova poi in
 `target/release/renbot` (`renbot.exe` su Windows).
-
-## Riga di comando
-
-Lo stesso eseguibile lavora anche da terminale: senza argomenti apre la finestra, con un comando
-no. `renbot-cli` offre gli stessi comandi senza la parte grafica, utile su un server o un NAS.
-
-```sh
-renbot rename ~/Video/da-sistemare            # anteprima: non modifica nulla
-renbot rename ~/Video/da-sistemare --apply    # rinomina i file pronti
-renbot undo                                   # annulla l'ultima rinomina
-renbot episodes "nome della serie" --season 2
-renbot list show lista.json                   # anteprima di una lista salvata dalla finestra
-renbot list apply lista.json                  # rinomina le righe pronte della lista
-renbot keys set tmdb                          # legge la chiave dalla tastiera, non dagli argomenti
-renbot keys verify tmdb
-renbot parse "Show.Name.S01E02.1080p.mkv"     # mostra che cosa viene riconosciuto dal nome
-```
-
-- `rename` mostra sempre l'anteprima; i file cambiano solo con `--apply`.
-- Gli abbinamenti "Da verificare" restano esclusi, salvo `--include-review`.
-- `--db tmdb|tvdb`, `--no-fallback`, `--lang`, `--movie-format` e `--series-format` valgono per il
-  singolo comando; senza di essi si usano le impostazioni salvate dalla finestra.
-- `renbot undo` e il pulsante della finestra annullano la stessa ultima operazione.
-- Il codice di uscita è 0 se tutto è andato a buon fine, diverso da 0 in caso di errori.
-- `renbot --help` e `renbot <comando> --help` elencano tutte le opzioni.
-
-Su Windows la versione di rilascio di `renbot.exe` non scrive sul terminale: da riga di comando
-usa `renbot-cli.exe`.
-
-Un file che si trova già nel percorso previsto dal formato risulta "Invariato": puoi quindi
-ripetere il comando sulla stessa cartella senza che le sottocartelle vengano annidate di nuovo.
 
 ## Chiavi API
 
@@ -147,9 +114,8 @@ cargo fmt --check
 
 | Percorso | Contenuto |
 |---|---|
-| `crates/renbot-core` | libreria: `parser`, `providers`, `matcher`, `renamer`, `cache`, `config`, `scanner`, `workflow` |
+| `crates/renbot-core` | libreria: `parser`, `providers`, `matcher`, `renamer`, `cache`, `config`, `scanner` |
 | `crates/renbot-app` | interfaccia grafica; i testi sono tutti in `src/strings.rs` |
-| `crates/renbot-cli` | riga di comando; i testi sono in `src/text.rs` |
 | `docs/filebot-analysis.md` | analisi iniziale e scelte di progetto |
 | `.github/workflows/ci.yml` | build, test, clippy e fmt su Windows, macOS e Linux |
 
